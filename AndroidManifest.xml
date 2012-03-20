@@ -24,19 +24,20 @@
      own application, the package name must be changed from "com.example.*"
      to come from a domain that you own or have control over. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.skeletonapp">
+    package="fr.enst.tpt29.picandshare">
 
     <!-- This package contains an application...  The 'label' is the name
          to display to the user for the overall application, and provides
          a default label for all following components.  The syntax here is a
          reference to one of our string resources.-->
-    <application android:label="@string/skeleton_app">
+    <application android:label="@string/picandshare">
 
         <!-- An Activity in the application - this is something the user
              can launch and interact with.  The "name" attribute is the
              name of the class within your package that implements this
              activity. -->
-        <activity android:name="SkeletonActivity">
+        <activity android:name="MainActivity"
+            	  android:theme="@android:style/Theme.Black.NoTitleBar">
 
             <!-- An IntentFilter tells the system when it should use your
                  activity.  This allows the user to get to your activity

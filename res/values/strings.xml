@@ -19,11 +19,13 @@
 
 <resources>
     <!-- Simple strings. -->
-    <string name="skeleton_app">Skeleton App</string>
+    <string name="picandshare">Pic and Share</string>
     <string name="back">Back</string>
     <string name="clear">Clear</string>
 
     <!-- This is a complex string containing style runs. -->
     <string name="main_label">Hello <u>th<ignore>e</ignore>re</u>, <i>you</i> <b>Activity</b>!</string>
+    <string name="takepic">Take a Picture</string>
+    <string name="viewmap">View Map</string>
 </resources>
 
