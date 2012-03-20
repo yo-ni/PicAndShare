@@ -2,6 +2,7 @@
 package fr.enst.tpt29.picandshare;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -77,7 +78,9 @@ public class MainActivity extends Activity {
 
     OnClickListener mViewMapListener = new OnClickListener() {
         public void onClick(View v) {
-            //mEditor.setText("");
+        	Intent i = new Intent(MainActivity.this, MapViewActivity.class);
+        	
+        	startActivity(i);
         }
     };
 }
