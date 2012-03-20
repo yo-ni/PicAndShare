@@ -1,5 +1,5 @@
 package fr.enst.tpt29.picandshare;
-
+//truc
 import com.google.android.maps.MapActivity;
 
 import android.os.Bundle;
