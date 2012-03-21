@@ -58,7 +58,8 @@
         </activity>
         
         <activity android:name="MapViewActivity"
-            	  android:theme="@android:style/Theme.Black.NoTitleBar">
+            	  android:theme="@android:style/Theme.Black.NoTitleBar"
+            	  android:screenOrientation="portrait">
         </activity>
 
     </application>
