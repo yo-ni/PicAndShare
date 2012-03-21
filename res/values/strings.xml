@@ -27,5 +27,10 @@
     <string name="main_label">Hello <u>th<ignore>e</ignore>re</u>, <i>you</i> <b>Activity</b>!</string>
     <string name="takepic">Take a Picture</string>
     <string name="viewmap">View Map</string>
+    <string name="add">Add a Pic</string>
+    <string name="share">Share</string>
+    <string name="sat">Satellite</string>
+    <string name="street">Street</string>
+    <string name="follow">Follow Me</string>
 </resources>
 

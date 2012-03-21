@@ -32,6 +32,7 @@
     <style name="TextAppearance.ActionButton">
         <item name="android:textStyle">bold</item>
     </style>
+    
 
 </resources>
 

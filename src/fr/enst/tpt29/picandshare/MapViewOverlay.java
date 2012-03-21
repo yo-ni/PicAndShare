@@ -5,8 +5,12 @@ import java.util.ArrayList;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.view.MotionEvent;
+import android.widget.Toast;
 
+import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
+import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 
 public class MapViewOverlay extends ItemizedOverlay<OverlayItem> {
@@ -48,7 +52,7 @@ public class MapViewOverlay extends ItemizedOverlay<OverlayItem> {
 	public int size() {
 		return mOverlays.size();
 	}
-
+	
 	@Override
 	protected boolean onTap(int index) {
 		OverlayItem item = mOverlays.get(index);
@@ -58,5 +62,12 @@ public class MapViewOverlay extends ItemizedOverlay<OverlayItem> {
 		dialog.show();
 		return true;
 	}
-		
+
+	public boolean onTap(final GeoPoint p, final MapView mapView) {
+		boolean tapped = super.onTap(p, mapView);
+        if (!tapped) {                
+                  
+        }                            
+        return false; 
+	}
 }

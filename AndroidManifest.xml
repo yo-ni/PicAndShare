@@ -34,18 +34,15 @@
          reference to one of our string resources.-->
     <application android:label="@string/picandshare">
 		<uses-library android:name="com.google.android.maps" />
-		
-        <!-- An Activity in the application - this is something the user
-             can launch and interact with.  The "name" attribute is the
-             name of the class within your package that implements this
-             activity. -->
+
         <activity android:name="MainActivity"
             	  android:theme="@android:style/Theme.Black.NoTitleBar">
-
-            <!-- An IntentFilter tells the system when it should use your
-                 activity.  This allows the user to get to your activity
-                 without someone having to explicitly know to launch your
-                 class "com.examplel.android.skeletonapp.SkeletonActivity". -->
+        </activity>
+        
+        <activity android:name="MapViewActivity"
+            	  android:theme="@android:style/Theme.Black.NoTitleBar"
+            	  android:screenOrientation="portrait">
+            	  
             <intent-filter>
                 <!-- The MAIN action describes a main entry point into an
                      activity, without any associated data. -->
@@ -54,12 +51,6 @@
                 <!-- This places this activity into the main app list. -->
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
-        </activity>
-        
-        <activity android:name="MapViewActivity"
-            	  android:theme="@android:style/Theme.Black.NoTitleBar"
-            	  android:screenOrientation="portrait">
         </activity>
 
     </application>
