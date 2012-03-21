@@ -81,6 +81,7 @@ public class MapViewActivity extends MapActivity{
         	((Button) findViewById(R.id.sat_street)).setText(R.string.street);
         }
         follow = false;
+        ((Button) findViewById(R.id.follow)).setBackgroundDrawable(getResources().getDrawable(R.drawable.gps_unactive));
     }
 
 	@Override
@@ -237,11 +238,10 @@ public class MapViewActivity extends MapActivity{
         public void onClick(View v) {
         	follow = !follow;
         	if (follow) {
-        		((Button) findViewById(R.id.follow)).setSelected(true);
+        		((Button) findViewById(R.id.follow)).setBackgroundDrawable(getResources().getDrawable(R.drawable.gps_active));
         	}
         	else {
-        		((Button) findViewById(R.id.follow)).setSelected(false);
-        	}
+        		((Button) findViewById(R.id.follow)).setBackgroundDrawable(getResources().getDrawable(R.drawable.gps_unactive));        	}
         }
     };
 }
