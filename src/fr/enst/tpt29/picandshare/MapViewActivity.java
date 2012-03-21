@@ -7,9 +7,9 @@ import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
+import com.google.android.maps.Projection;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
@@ -22,9 +22,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.Toast;
+import android.view.GestureDetector;
+import android.view.GestureDetector.OnDoubleTapListener;
 
-public class MapViewActivity extends MapActivity{
+public class MapViewActivity extends MapActivity implements OnDoubleTapListener, GestureDetector.OnGestureListener{
 	static boolean firstPos = false;
 	static GeoPoint lastPoint = null;
 	static boolean follow = true;
@@ -35,13 +36,14 @@ public class MapViewActivity extends MapActivity{
 	private MapView mapView;
 	private MapViewOverlay mapViewOverlay;
 	List<Overlay> mapOverlays;
+	private GestureDetector gestureDetector = null;
 	
 	static final private int ADD_ID = Menu.FIRST;
     static final private int SAT_ID = Menu.FIRST + 1;
     static final private int SHARE_ID = Menu.FIRST + 2;
 	
 	public MapViewActivity(){
-		
+
 	}
 	
 	@Override public void onCreate(Bundle savedInstanceState){
@@ -49,18 +51,19 @@ public class MapViewActivity extends MapActivity{
 		
 		setContentView(R.layout.map_activity);
 		mapView = (MapView) findViewById(R.id.mapview);
-		
 		mlocManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 		slocListener = new SingleLocationListener();
 		clocListener = new ContinuousLocListener();
 		mapOverlays = mapView.getOverlays();
 		Drawable drawable = this.getResources().getDrawable(R.drawable.violet);
-		mapViewOverlay = new MapViewOverlay(drawable,this);
+		mapViewOverlay = new MapViewOverlay(drawable,this, this);
 		mapOverlays.add(mapViewOverlay);
 		if(lastPoint != null){
 			OverlayItem overlayItem  = new OverlayItem(lastPoint,"On est ici !","avec sam");
 			mapViewOverlay.addOverlay(overlayItem);
 		}
+		gestureDetector = new GestureDetector(this);
+        gestureDetector.setOnDoubleTapListener(this);
 		
 		// Hook up button presses to the appropriate event handler.
         ((Button) findViewById(R.id.addpic)).setOnClickListener(addListener);
@@ -142,12 +145,6 @@ public class MapViewActivity extends MapActivity{
         super.onPause();
         mlocManager.removeUpdates(clocListener);
     }
-	
-	@Override 
-	public boolean onTouchEvent(MotionEvent event) {
-		follow = false;
-		return true;
-	}
 
 	/* Class Listeners */
 
@@ -190,7 +187,7 @@ public class MapViewActivity extends MapActivity{
 			int latitude = (int) (location.getLatitude() * 1E6);
 			int longitude = (int) (location.getLongitude() * 1E6);
 			lastPoint = new GeoPoint(latitude,longitude);
-			OverlayItem overlayItem  = new OverlayItem(lastPoint,"On est ici !","avec sam");
+			OverlayItem overlayItem  = new OverlayItem(lastPoint,"On est ici !","et pas là bas");
 			mapViewOverlay.clearOverlay();
 			mapViewOverlay.addOverlay(overlayItem);
 			mapView.invalidate();
@@ -238,10 +235,54 @@ public class MapViewActivity extends MapActivity{
         public void onClick(View v) {
         	follow = !follow;
         	if (follow) {
+        		if (lastPoint != null) {
+        			mapView.getController().animateTo(lastPoint);
+        		}
         		((Button) findViewById(R.id.follow)).setBackgroundDrawable(getResources().getDrawable(R.drawable.gps_active));
         	}
         	else {
         		((Button) findViewById(R.id.follow)).setBackgroundDrawable(getResources().getDrawable(R.drawable.gps_unactive));        	}
         }
     };
+    
+    public boolean onDoubleTap(MotionEvent me) {
+    	Projection p = mapView.getProjection();
+        GeoPoint point = p.fromPixels((int) me.getX(), (int) me.getY());
+        mapView.getController().animateTo(point);
+        mapView.getController().zoomIn();
+        return true;
+    }
+
+	public boolean onDoubleTapEvent(MotionEvent e) {
+		return false;
+	}
+	
+	public boolean dispatchTouchEvent(MotionEvent ev) {
+        gestureDetector.onTouchEvent(ev);
+        return super.dispatchTouchEvent(ev);
+    }
+
+	public boolean onSingleTapConfirmed(MotionEvent e) {
+		return false;
+	}
+
+	public boolean onDown(MotionEvent e) {
+		return false;
+	}
+
+	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+		return false;
+	}
+
+	public void onLongPress(MotionEvent e) {}
+
+	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+		return false;
+	}
+
+	public void onShowPress(MotionEvent e) {}
+
+	public boolean onSingleTapUp(MotionEvent e) {
+		return false;
+	}
 }
