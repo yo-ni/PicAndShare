@@ -2,7 +2,6 @@ package fr.enst.tpt29.picandshare;
 
 import java.util.ArrayList;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -15,7 +14,6 @@ import android.widget.Toast;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
-import com.google.android.maps.OverlayItem;
 
 public class MapViewOverlay extends ItemizedOverlay<PhotoOverlayItem> {
 	

@@ -1,18 +1,24 @@
 package fr.enst.tpt29.picandshare;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.List;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
-import com.google.android.maps.OverlayItem;
 import com.google.android.maps.Projection;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
-import android.graphics.Point;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.location.Criteria;
 import android.location.Location;
@@ -20,6 +26,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Display;
@@ -29,7 +36,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.Toast;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnDoubleTapListener;
@@ -48,6 +54,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 	private MapViewOverlay photoViewOverlay;
 	List<Overlay> mapOverlays;
 	private GestureDetector gestureDetector = null;
+	private SQLiteDatabase myDb;
 	
 	static final private int ADD_ID = Menu.FIRST;
     static final private int SAT_ID = Menu.FIRST + 1;
@@ -56,6 +63,20 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
     static final private int CHOOSE_ID = Menu.FIRST + 4;
     static final private int LOC_ID = Menu.FIRST + 5;
     static final int CAMERA_REQUEST = 201;
+    
+    //public static final String KEY_ID = "_id";
+    public static final String KEY_NAME = "commentaire";
+    public static final String KEY_IMG = "image";
+    public static final String KEY_LAT = "latitude";
+    public static final String KEY_LON = "longitude";
+    private static final String PHOTO_TABLE = "photo";
+    
+    private static final String CREATE_PHOTO_TABLE = "create table if not exists "+PHOTO_TABLE+" ("
+                                         //+KEY_ID+" integer primary key autoincrement, "
+                                         +KEY_IMG+" blob not null, "
+                                         +KEY_LAT+" int not null, "
+                                         +KEY_LON+" int not null, "
+                                         +KEY_NAME+" text not null);";
 	
 	public MapViewActivity(){
 
@@ -77,11 +98,27 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 		photoViewOverlay = new MapViewOverlay(drawable2,this,this,false);
 		mapOverlays.add(photoViewOverlay);
 		if(lastPoint != null){
-			PhotoOverlayItem overlayItem  = new PhotoOverlayItem(lastPoint,"On est ici !","avec sam",null);
+			PhotoOverlayItem overlayItem  = new PhotoOverlayItem(lastPoint,"","",null,"");
 			mapViewOverlay.addOverlay(overlayItem);
 		}
 		gestureDetector = new GestureDetector(this);
         gestureDetector.setOnDoubleTapListener(this);
+        
+        Log.i("d", "dans onCreate");
+        
+        myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
+
+        myDb.execSQL(CREATE_PHOTO_TABLE);
+        //On ajoute les entrées de la base
+        int i=0;
+        PhotoOverlayItem item = getItemFromDB(i); 
+        while (item != null) {
+        	photoViewOverlay.addOverlay(item);
+        	item = getItemFromDB(i);
+        	i++;
+        }
+        myDb.close();
+
 		
 		// Hook up button presses to the appropriate event handler.
         ((Button) findViewById(R.id.addpic)).setOnClickListener(addListener);
@@ -95,6 +132,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 	@Override
     protected void onResume() {
         super.onResume();
+        Log.i("d","au début Résume");
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
         mlocManager.requestLocationUpdates(mlocManager.getBestProvider(criteria, true), 5, 10, clocListener);
@@ -108,6 +146,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
         follow = false;
         ((Button) findViewById(R.id.follow)).setBackgroundDrawable(getResources().getDrawable(R.drawable.gps_unactive));
         addPic = false;
+        Log.i("d","fin resume");
 	}
 
 	@Override
@@ -238,7 +277,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 			int latitude = (int) (location.getLatitude() * 1E6);
 			int longitude = (int) (location.getLongitude() * 1E6);
 			lastPoint = new GeoPoint(latitude,longitude);
-			PhotoOverlayItem overlayItem  = new PhotoOverlayItem(lastPoint,"On est ici !","et pas là bas",null);
+			PhotoOverlayItem overlayItem  = new PhotoOverlayItem(lastPoint,"","",null,"");
 			
 			mapViewOverlay.clearOverlay();
 			mapViewOverlay.addOverlay(overlayItem);
@@ -360,15 +399,53 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 					int width = display.getWidth();
 					Projection p = mapView.getProjection();
 					GeoPoint point = p.fromPixels(width/2, height/2);
-					PhotoOverlayItem photoItem  = new PhotoOverlayItem(point,"En voilà une belle photo","et pas là bas",photo);
+					PhotoOverlayItem photoItem  = new PhotoOverlayItem(point,"","",photo,"test");
 					photoViewOverlay.addOverlay(photoItem);
+					myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
+					createItemEntry(photoItem);
+					myDb.close();
 				}
 				else {
-					PhotoOverlayItem photoItem  = new PhotoOverlayItem(lastPoint,"En voilà une belle photo","et pas là bas",photo);
+					PhotoOverlayItem photoItem  = new PhotoOverlayItem(lastPoint,"","",photo,"test");
 					photoViewOverlay.addOverlay(photoItem);
+					myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
+					createItemEntry(photoItem);
+					myDb.close();
 				}
 			}
 			//else Toast.makeText(getApplicationContext(), "Photo non réussie!", Toast.LENGTH_SHORT).show();
 		}
 	}
+	
+	public void createItemEntry(PhotoOverlayItem item) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        item.getBitmap().compress(Bitmap.CompressFormat.PNG, 100, out);
+        ContentValues cv = new ContentValues();
+        cv.put(KEY_IMG, out.toByteArray());            
+        cv.put(KEY_NAME, item.getComm());
+        cv.put(KEY_LAT, item.getLat());
+        cv.put(KEY_LON, item.getLong());
+        Log.i("d","avant entrée");
+        myDb.insert(PHOTO_TABLE, null, cv);
+        Log.i("d","après entrée");
+    }
+	
+	public PhotoOverlayItem getItemFromDB(int pos) throws SQLException {
+        Cursor cur = myDb.query(true,
+                               PHOTO_TABLE,
+                               new String[] {KEY_IMG, KEY_NAME, KEY_LAT, KEY_LON},
+                               null, null,null, null, null, null);
+        if(cur.moveToPosition(pos)) {
+            byte[] blob = cur.getBlob(cur.getColumnIndex(KEY_IMG));
+            Bitmap bmp = BitmapFactory.decodeByteArray(blob, 0, blob.length);
+            String comm = cur.getString(cur.getColumnIndex(KEY_NAME));
+            int lat = cur.getInt(cur.getColumnIndex(KEY_LAT));
+            int longi = cur.getInt(cur.getColumnIndex(KEY_LON));
+            cur.close();
+            GeoPoint point = new GeoPoint(lat,longi);
+            return new PhotoOverlayItem(point,"","",bmp,comm);
+        }
+        cur.close();
+        return null;
+    }    
 }
