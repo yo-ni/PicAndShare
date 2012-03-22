@@ -3,10 +3,13 @@ package fr.enst.tpt29.picandshare;
 import java.util.ArrayList;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
@@ -14,9 +17,9 @@ import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 
-public class MapViewOverlay extends ItemizedOverlay<OverlayItem> {
+public class MapViewOverlay extends ItemizedOverlay<PhotoOverlayItem> {
 	
-	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
+	private ArrayList<PhotoOverlayItem> mOverlays = new ArrayList<PhotoOverlayItem>();
 	private Context mContext;
 	private MapViewActivity activ;
 	boolean isLocation;
@@ -34,12 +37,12 @@ public class MapViewOverlay extends ItemizedOverlay<OverlayItem> {
 		  isLocation = isloc;
 		}
 
-	public void addOverlay(OverlayItem overlay) {
+	public void addOverlay(PhotoOverlayItem overlay) {
 	    mOverlays.add(overlay);
 	    populate();
 	}
 	
-	public void setOverlay(OverlayItem overlay, int i) {
+	public void setOverlay(PhotoOverlayItem overlay, int i) {
 		mOverlays.set(i, overlay);
 		populate();
 	}
@@ -49,7 +52,7 @@ public class MapViewOverlay extends ItemizedOverlay<OverlayItem> {
 	}
 
 	@Override
-	protected OverlayItem createItem(int i) {
+	protected PhotoOverlayItem createItem(int i) {
 	  return mOverlays.get(i);
 	}
 
@@ -61,10 +64,21 @@ public class MapViewOverlay extends ItemizedOverlay<OverlayItem> {
 	@Override
 	protected boolean onTap(int index) {
 		if (!isLocation) {
-			OverlayItem item = mOverlays.get(index);
-			AlertDialog.Builder dialog = new AlertDialog.Builder(mContext);
-			dialog.setTitle(item.getTitle());
-			dialog.setMessage(item.getSnippet());
+			PhotoOverlayItem item = mOverlays.get(index);
+//			AlertDialog.Builder dialog = new AlertDialog.Builder(mContext);
+//			dialog.setTitle(item.getTitle());
+//			dialog.setMessage(item.getSnippet());
+//			dialog.show();
+			Dialog dialog = new Dialog(mContext);
+
+			dialog.setContentView(R.layout.dialog_photo);
+			dialog.setTitle("Test Photo");
+
+			TextView text = (TextView) dialog.findViewById(R.id.text);
+			text.setText("Quelle belle photo");
+			ImageView image = (ImageView) dialog.findViewById(R.id.image);
+			image.setImageBitmap(item.image);
+			
 			dialog.show();
 		}
 		return true;

@@ -29,6 +29,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnDoubleTapListener;
@@ -76,7 +77,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 		photoViewOverlay = new MapViewOverlay(drawable2,this,this,false);
 		mapOverlays.add(photoViewOverlay);
 		if(lastPoint != null){
-			OverlayItem overlayItem  = new OverlayItem(lastPoint,"On est ici !","avec sam");
+			PhotoOverlayItem overlayItem  = new PhotoOverlayItem(lastPoint,"On est ici !","avec sam",null);
 			mapViewOverlay.addOverlay(overlayItem);
 		}
 		gestureDetector = new GestureDetector(this);
@@ -237,7 +238,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 			int latitude = (int) (location.getLatitude() * 1E6);
 			int longitude = (int) (location.getLongitude() * 1E6);
 			lastPoint = new GeoPoint(latitude,longitude);
-			OverlayItem overlayItem  = new OverlayItem(lastPoint,"On est ici !","et pas là bas");
+			PhotoOverlayItem overlayItem  = new PhotoOverlayItem(lastPoint,"On est ici !","et pas là bas",null);
 			
 			mapViewOverlay.clearOverlay();
 			mapViewOverlay.addOverlay(overlayItem);
@@ -359,11 +360,11 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 					int width = display.getWidth();
 					Projection p = mapView.getProjection();
 					GeoPoint point = p.fromPixels(width/2, height/2);
-					OverlayItem photoItem  = new OverlayItem(point,"En voilà une belle photo","et pas là bas");
+					PhotoOverlayItem photoItem  = new PhotoOverlayItem(point,"En voilà une belle photo","et pas là bas",photo);
 					photoViewOverlay.addOverlay(photoItem);
 				}
 				else {
-					OverlayItem photoItem  = new OverlayItem(lastPoint,"En voilà une belle photo","et pas là bas");
+					PhotoOverlayItem photoItem  = new PhotoOverlayItem(lastPoint,"En voilà une belle photo","et pas là bas",photo);
 					photoViewOverlay.addOverlay(photoItem);
 				}
 			}
