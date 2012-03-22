@@ -32,5 +32,8 @@
     <string name="sat">Satellite</string>
     <string name="street">Street</string>
     <string name="follow">Follow Me</string>
+    <string name="take">Take a picture</string>
+    <string name="choose">Choose an existing picture</string>
+    <string name="loc">Choose a location on map</string>
 </resources>
 

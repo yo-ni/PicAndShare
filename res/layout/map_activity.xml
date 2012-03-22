@@ -19,7 +19,8 @@
         android:layout_alignParentTop="true"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="5dp"
-        android:text="@string/add" />
+        android:text="@string/add"
+        android:background="@drawable/boutons" />
 
     <Button
         android:id="@+id/sat_street"
@@ -29,7 +30,8 @@
         android:layout_alignBottom="@+id/addpic"
         android:layout_marginLeft="17dp"
         android:layout_toRightOf="@+id/addpic"
-        android:text="@string/sat" />
+        android:text="@string/sat" 
+        android:background="@drawable/boutons"/>
 
     <Button
         android:id="@+id/share"
@@ -39,7 +41,8 @@
         android:layout_alignBottom="@+id/sat_street"
         android:layout_marginLeft="17dp"
         android:layout_toRightOf="@+id/sat_street"
-        android:text="@string/share" />
+        android:text="@string/share" 
+        android:background="@drawable/boutons"/>
 
     <Button
         android:id="@+id/follow"
@@ -49,5 +52,5 @@
         android:layout_alignParentRight="true"
         android:layout_marginBottom="5dp"
         android:layout_marginRight="5dp" />
-
+    
 </RelativeLayout>

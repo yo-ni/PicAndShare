@@ -10,18 +10,26 @@ import com.google.android.maps.OverlayItem;
 import com.google.android.maps.Projection;
 
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.Toast;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnDoubleTapListener;
 
@@ -29,18 +37,24 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 	static boolean firstPos = false;
 	static GeoPoint lastPoint = null;
 	static boolean follow = true;
+	static boolean addPic = false;
 
 	private LocationManager mlocManager;
 	private SingleLocationListener slocListener;
 	private ContinuousLocListener clocListener;
 	private MapView mapView;
 	private MapViewOverlay mapViewOverlay;
+	private MapViewOverlay photoViewOverlay;
 	List<Overlay> mapOverlays;
 	private GestureDetector gestureDetector = null;
 	
 	static final private int ADD_ID = Menu.FIRST;
     static final private int SAT_ID = Menu.FIRST + 1;
     static final private int SHARE_ID = Menu.FIRST + 2;
+    static final private int TAKE_ID = Menu.FIRST + 3;
+    static final private int CHOOSE_ID = Menu.FIRST + 4;
+    static final private int LOC_ID = Menu.FIRST + 5;
+    static final int CAMERA_REQUEST = 201;
 	
 	public MapViewActivity(){
 
@@ -55,9 +69,12 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 		slocListener = new SingleLocationListener();
 		clocListener = new ContinuousLocListener();
 		mapOverlays = mapView.getOverlays();
-		Drawable drawable = this.getResources().getDrawable(R.drawable.violet);
-		mapViewOverlay = new MapViewOverlay(drawable,this, this);
+		Drawable drawable = this.getResources().getDrawable(R.drawable.position);
+		Drawable drawable2 = this.getResources().getDrawable(R.drawable.gps);
+		mapViewOverlay = new MapViewOverlay(drawable,this, this, true);
 		mapOverlays.add(mapViewOverlay);
+		photoViewOverlay = new MapViewOverlay(drawable2,this,this,false);
+		mapOverlays.add(photoViewOverlay);
 		if(lastPoint != null){
 			OverlayItem overlayItem  = new OverlayItem(lastPoint,"On est ici !","avec sam");
 			mapViewOverlay.addOverlay(overlayItem);
@@ -70,12 +87,16 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
         ((Button) findViewById(R.id.sat_street)).setOnClickListener(satListener);
         ((Button) findViewById(R.id.share)).setOnClickListener(shareListener);
         ((Button) findViewById(R.id.follow)).setOnClickListener(followListener);
+        
+        registerForContextMenu((Button) findViewById(R.id.addpic));
 	}
 	
 	@Override
     protected void onResume() {
         super.onResume();
-        mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, clocListener);
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        mlocManager.requestLocationUpdates(mlocManager.getBestProvider(criteria, true), 5, 10, clocListener);
         if (!MapViewActivity.firstPos) {
         	MapViewActivity.firstPos = true;
         	mlocManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, slocListener, null);
@@ -85,7 +106,8 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
         }
         follow = false;
         ((Button) findViewById(R.id.follow)).setBackgroundDrawable(getResources().getDrawable(R.drawable.gps_unactive));
-    }
+        addPic = false;
+	}
 
 	@Override
 	protected boolean isRouteDisplayed() {
@@ -106,6 +128,15 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
     }
 	
 	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuinfo) {
+		super.onCreateContextMenu(menu, v, menuinfo);
+		
+		menu.add(0, TAKE_ID, 0, R.string.take);
+		menu.add(0, CHOOSE_ID, 0, R.string.choose);
+		menu.add(0, LOC_ID, 0, R.string.loc);
+	}
+	
+	@Override
 	public boolean onPrepareOptionsMenu (Menu menu){
 		if (mapView.isSatellite()) {
 			menu.getItem(SAT_ID-1).setTitle(getString(R.string.street));
@@ -120,7 +151,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
         case ADD_ID:
-
+        	openContextMenu((Button) findViewById(R.id.addpic));
             return true;
         case SAT_ID:
         	if (mapView.isSatellite()) {
@@ -139,6 +170,25 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 
         return super.onOptionsItemSelected(item);
     }
+	
+	@Override 
+	public boolean onContextItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case TAKE_ID:
+			Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+			startActivityForResult(cameraIntent, CAMERA_REQUEST);
+			takeSelected();
+			return true;
+		case CHOOSE_ID:
+			chooseSelected();
+			return true;
+		case LOC_ID:
+			locSelected();
+			return true;
+		};
+		
+		return super.onContextItemSelected(item);
+	}
 	
 	@Override
     protected void onPause() {
@@ -188,6 +238,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 			int longitude = (int) (location.getLongitude() * 1E6);
 			lastPoint = new GeoPoint(latitude,longitude);
 			OverlayItem overlayItem  = new OverlayItem(lastPoint,"On est ici !","et pas là bas");
+			
 			mapViewOverlay.clearOverlay();
 			mapViewOverlay.addOverlay(overlayItem);
 			mapView.invalidate();
@@ -208,7 +259,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 	
 	OnClickListener addListener = new OnClickListener() {
         public void onClick(View v) {
-  
+        	openContextMenu(v);
         }
     };
     
@@ -284,5 +335,39 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 
 	public boolean onSingleTapUp(MotionEvent e) {
 		return false;
+	}
+	
+	public void takeSelected() {
+		
+	}
+	
+	public void chooseSelected() {
+		
+	}
+	
+	public void locSelected() {
+
+	}
+	
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == CAMERA_REQUEST) {
+			if(data!=null) {
+				Bitmap photo = (Bitmap) data.getExtras().get("data");
+				if (lastPoint == null) {
+					Display display = getWindowManager().getDefaultDisplay();
+					int height = display.getHeight();
+					int width = display.getWidth();
+					Projection p = mapView.getProjection();
+					GeoPoint point = p.fromPixels(width/2, height/2);
+					OverlayItem photoItem  = new OverlayItem(point,"En voilà une belle photo","et pas là bas");
+					photoViewOverlay.addOverlay(photoItem);
+				}
+				else {
+					OverlayItem photoItem  = new OverlayItem(lastPoint,"En voilà une belle photo","et pas là bas");
+					photoViewOverlay.addOverlay(photoItem);
+				}
+			}
+			//else Toast.makeText(getApplicationContext(), "Photo non réussie!", Toast.LENGTH_SHORT).show();
+		}
 	}
 }

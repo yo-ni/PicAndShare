@@ -19,17 +19,19 @@ public class MapViewOverlay extends ItemizedOverlay<OverlayItem> {
 	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
 	private Context mContext;
 	private MapViewActivity activ;
+	boolean isLocation;
 	
 	public MapViewOverlay(Drawable defaultMarker) {
 		//super(defaultMarker);
 		  super(boundCenterBottom(defaultMarker));
 	}
 	
-	public MapViewOverlay(Drawable defaultMarker, Context context, MapViewActivity act) {
+	public MapViewOverlay(Drawable defaultMarker, Context context, MapViewActivity act, boolean isloc) {
 		  super(boundCenterBottom(defaultMarker));
 		  this.populate();
 		  mContext = context;
 		  activ = act;
+		  isLocation = isloc;
 		}
 
 	public void addOverlay(OverlayItem overlay) {
@@ -58,11 +60,13 @@ public class MapViewOverlay extends ItemizedOverlay<OverlayItem> {
 	
 	@Override
 	protected boolean onTap(int index) {
-		OverlayItem item = mOverlays.get(index);
-		AlertDialog.Builder dialog = new AlertDialog.Builder(mContext);
-		dialog.setTitle(item.getTitle());
-		dialog.setMessage(item.getSnippet());
-		dialog.show();
+		if (!isLocation) {
+			OverlayItem item = mOverlays.get(index);
+			AlertDialog.Builder dialog = new AlertDialog.Builder(mContext);
+			dialog.setTitle(item.getTitle());
+			dialog.setMessage(item.getSnippet());
+			dialog.show();
+		}
 		return true;
 	}
 
