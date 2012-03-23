@@ -31,7 +31,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 	private LocationManager mlocManager;
 	//private SingleLocationListener slocListener;
 	private ContinuousLocListener clocListener;
-	private MapView mapView;
+	public MapView mapView;
 	private MapViewOverlay mapViewOverlay;
 	private MapViewOverlay photoViewOverlay;
 	List<Overlay> mapOverlays;
@@ -52,7 +52,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
     public static final String KEY_IMG = "image";
     public static final String KEY_LAT = "latitude";
     public static final String KEY_LON = "longitude";
-    private static final String PHOTO_TABLE = "photo";
+    public static final String PHOTO_TABLE = "photo";
     
     //string pour la requête SQL
     private static final String CREATE_PHOTO_TABLE = "create table if not exists "+PHOTO_TABLE+" ("
@@ -150,6 +150,10 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 		mlocManager.removeUpdates(clocListener);
 	}
 
+	public SQLiteDatabase getDb() {
+		return myDb;
+	}
+	
 	@Override
 	protected boolean isRouteDisplayed() {
 		return false;

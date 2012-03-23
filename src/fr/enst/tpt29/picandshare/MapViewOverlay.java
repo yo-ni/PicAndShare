@@ -18,6 +18,8 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
 
+import android.database.sqlite.SQLiteDatabase;
+
 public class MapViewOverlay extends ItemizedOverlay<PhotoOverlayItem> {
 	
 	//Liste qui contiendra les marqueurs
@@ -74,6 +76,12 @@ public class MapViewOverlay extends ItemizedOverlay<PhotoOverlayItem> {
 		mOverlays.remove(item);
 	    setLastFocusedIndex(-1);
 		populate();
+		activ.mapView.invalidate();
+		SQLiteDatabase db = activ.openOrCreateDatabase(activ.getFilesDir()+"/item.dat",MapViewActivity.MODE_WORLD_WRITEABLE, null);
+		//delete from db
+		//pour l'instant inexact mais assez précis
+		db.delete(MapViewActivity.PHOTO_TABLE, MapViewActivity.KEY_LAT+"="+item.getLat(), null);
+		db.close();
 	}
 	
 	@Override
