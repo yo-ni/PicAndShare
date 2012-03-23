@@ -3,11 +3,9 @@ package fr.enst.tpt29.picandshare;
 import java.util.ArrayList;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -43,7 +41,6 @@ public class MapViewOverlay extends ItemizedOverlay<PhotoOverlayItem> {
 
 	//Ajout d'un item à la liste
 	public void addOverlay(PhotoOverlayItem overlay) {
-		Log.i("df","avant ajout");
 	    mOverlays.add(overlay);
 	    setLastFocusedIndex(-1);
 	    populate();

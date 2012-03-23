@@ -1,6 +1,7 @@
 package fr.enst.tpt29.picandshare;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 import com.google.android.maps.*;
@@ -12,8 +13,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.*;
 import android.graphics.drawable.Drawable;
 import android.location.*;
+import android.net.Uri;
 import android.os.*;
-import android.util.Log;
+import android.provider.MediaStore;
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
@@ -46,6 +48,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
     static final private int CHOOSE_ID = Menu.FIRST + 4;
     static final private int LOC_ID = Menu.FIRST + 5;
     static final int CAMERA_REQUEST = 201;
+    static final int SELECT_IMAGE = 202;
     
     //variables pour la base de données
     public static final String KEY_COMM = "commentaire";
@@ -110,7 +113,6 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
         PhotoOverlayItem item = getItemFromDB(i); 
         while (item != null) {
         	photoViewOverlay.addOverlay(item);
-        	Log.i("df",item.getLat() + " " + item.getLong());
         	i++;
         	item = getItemFromDB(i);
         }
@@ -223,7 +225,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 			startActivityForResult(cameraIntent, CAMERA_REQUEST);
 			return true;
 		case CHOOSE_ID:
-			
+			startActivityForResult(new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI), SELECT_IMAGE);
 			return true;
 		case LOC_ID:
 			
@@ -351,7 +353,14 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 		if (requestCode == CAMERA_REQUEST) {
 			//On reçoit ou non une photo de l'appareil photo
 			if(data!=null) {
-				Bitmap photo = (Bitmap) data.getExtras().get("data");
+				Bitmap photo1 = (Bitmap) data.getExtras().get("data");
+				Bitmap photo;
+				if (photo1.getHeight() > photo1.getWidth()){
+					photo = getResizedBitmap(photo1, 200, 120);
+				}
+				else {
+					photo = getResizedBitmap(photo1, 120, 200);
+				}
 				if (lastPoint == null) {
 					//Si on a aucune position valide on ajoute au centre de la vue
 					Display display = getWindowManager().getDefaultDisplay();
@@ -399,13 +408,79 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 				}
 			}
 		}
+		else if (requestCode == SELECT_IMAGE){
+			//Pour l'instant on fait la même chose qu'avec la photo prise
+			//On reçoit ou non une photo de l'appareil photo
+			if(data!=null) {
+				Uri selPhoto = data.getData();
+				try {
+					Bitmap photo1 = BitmapFactory.decodeStream(getContentResolver().openInputStream(selPhoto));
+					Bitmap photo;
+					if (photo1.getHeight() > photo1.getWidth()){
+						photo = getResizedBitmap(photo1, 200, 120);
+					}
+					else {
+						photo = getResizedBitmap(photo1, 120, 200);
+					}
+					
+				if (lastPoint == null) {
+					//Si on a aucune position valide on ajoute au centre de la vue
+					Display display = getWindowManager().getDefaultDisplay();
+					int height = display.getHeight();
+					int width = display.getWidth();
+					Projection p = mapView.getProjection();
+					GeoPoint point = p.fromPixels(width/2, height/2);
+					
+					if(photoViewOverlay.testUnique(point)) {
+						PhotoOverlayItem photoItem  = new PhotoOverlayItem(point,"","",photo,"test");
+						photoViewOverlay.addOverlay(photoItem);
+						
+						//On ajoute directement l'item dans la base
+						myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
+						createItemEntry(photoItem);
+						myDb.close();
+					}
+					else {
+						//S'il existe déjà une photo à la même position dans la base,
+						//Il y a un problème à la suppression
+						AlertDialog alertDial = new AlertDialog.Builder(this).create();
+						alertDial.setTitle("Attention!");
+						alertDial.setMessage("Il y a déjà une photo à cet endroit");
+						alertDial.show();
+					}
+				}
+				else {
+					//Sinon on la place à la position de l'utilisateur
+					if (photoViewOverlay.testUnique(lastPoint)) {
+						PhotoOverlayItem photoItem  = new PhotoOverlayItem(lastPoint,"","",photo,"test");
+						photoViewOverlay.addOverlay(photoItem);
+						
+						myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
+						createItemEntry(photoItem);
+						myDb.close();
+					}
+					else {
+						//S'il existe déjà une photo à la même position dans la base,
+						//Il y a un problème à la suppression
+						AlertDialog alertDial = new AlertDialog.Builder(this).create();
+						alertDial.setTitle("Attention!");
+						alertDial.setMessage("Il y a déjà une photo à cet endroit");
+						alertDial.show();
+					}
+					}
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	
 	public void createItemEntry(PhotoOverlayItem item) {
 		//On crée une nouvelle entrée dans la base qui est déjà ouverte
 		//On convertit l'image pour la sauvegarder en Byte
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        item.getBitmap().compress(Bitmap.CompressFormat.PNG, 100, out);
+        item.getBitmap().compress(Bitmap.CompressFormat.JPEG, 100, out);
         
         ContentValues cv = new ContentValues();
         cv.put(KEY_IMG, out.toByteArray());            
@@ -439,4 +514,21 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
         cur.close();
         return null;
     }    
+	
+	public Bitmap getResizedBitmap(Bitmap bm, int newHeight, int newWidth) {
+		
+		int width = bm.getWidth();
+		int height = bm.getHeight();
+		float scaleWidth = ((float) newWidth) / width;
+		float scaleHeight = ((float) newHeight) / height;
+		
+		// CREATE A MATRIX FOR THE MANIPULATION
+		Matrix matrix = new Matrix();
+		// RESIZE THE BIT MAP
+		matrix.postScale(scaleWidth, scaleHeight);
+		// RECREATE THE NEW BITMAP
+		Bitmap resizedBitmap = Bitmap.createBitmap(bm, 0, 0, width, height, matrix, false);
+		return resizedBitmap;
+	}
+
 }
