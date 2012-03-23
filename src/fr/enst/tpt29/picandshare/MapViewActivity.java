@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.android.maps.*;
 
+import android.app.AlertDialog;
 import android.content.*;
 import android.database.*;
 import android.database.sqlite.SQLiteDatabase;
@@ -12,6 +13,7 @@ import android.graphics.*;
 import android.graphics.drawable.Drawable;
 import android.location.*;
 import android.os.*;
+import android.util.Log;
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
@@ -108,8 +110,9 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
         PhotoOverlayItem item = getItemFromDB(i); 
         while (item != null) {
         	photoViewOverlay.addOverlay(item);
-        	item = getItemFromDB(i);
+        	Log.i("df",item.getLat() + " " + item.getLong());
         	i++;
+        	item = getItemFromDB(i);
         }
         myDb.close();
        
@@ -353,22 +356,42 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 					Projection p = mapView.getProjection();
 					GeoPoint point = p.fromPixels(width/2, height/2);
 					
-					PhotoOverlayItem photoItem  = new PhotoOverlayItem(point,"","",photo,"test");
-					photoViewOverlay.addOverlay(photoItem);
-					
-					//On ajoute directement l'item dans la base
-					myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
-					createItemEntry(photoItem);
-					myDb.close();
+					if(photoViewOverlay.testUnique(point)) {
+						PhotoOverlayItem photoItem  = new PhotoOverlayItem(point,"","",photo,"test");
+						photoViewOverlay.addOverlay(photoItem);
+						
+						//On ajoute directement l'item dans la base
+						myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
+						createItemEntry(photoItem);
+						myDb.close();
+					}
+					else {
+						//S'il existe déjà une photo à la même position dans la base,
+						//Il y a un problème à la suppression
+						AlertDialog alertDial = new AlertDialog.Builder(this).create();
+						alertDial.setTitle("Attention!");
+						alertDial.setMessage("Il y a déjà une photo à cet endroit");
+						alertDial.show();
+					}
 				}
 				else {
 					//Sinon on la place à la position de l'utilisateur
-					PhotoOverlayItem photoItem  = new PhotoOverlayItem(lastPoint,"","",photo,"test");
-					photoViewOverlay.addOverlay(photoItem);
-					
-					myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
-					createItemEntry(photoItem);
-					myDb.close();
+					if (photoViewOverlay.testUnique(lastPoint)) {
+						PhotoOverlayItem photoItem  = new PhotoOverlayItem(lastPoint,"","",photo,"test");
+						photoViewOverlay.addOverlay(photoItem);
+						
+						myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
+						createItemEntry(photoItem);
+						myDb.close();
+					}
+					else {
+						//S'il existe déjà une photo à la même position dans la base,
+						//Il y a un problème à la suppression
+						AlertDialog alertDial = new AlertDialog.Builder(this).create();
+						alertDial.setTitle("Attention!");
+						alertDial.setMessage("Il y a déjà une photo à cet endroit");
+						alertDial.show();
+					}
 				}
 			}
 		}

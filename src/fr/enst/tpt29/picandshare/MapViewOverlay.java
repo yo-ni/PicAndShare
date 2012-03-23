@@ -2,10 +2,15 @@ package fr.enst.tpt29.picandshare;
 
 import java.util.ArrayList;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -36,8 +41,19 @@ public class MapViewOverlay extends ItemizedOverlay<PhotoOverlayItem> {
 
 	//Ajout d'un item à la liste
 	public void addOverlay(PhotoOverlayItem overlay) {
+		Log.i("df","avant ajout");
 	    mOverlays.add(overlay);
+	    setLastFocusedIndex(-1);
 	    populate();
+
+	}
+	
+	public boolean testUnique(GeoPoint point) {
+		for( int i=0; i<mOverlays.size();i++){
+		if(point.equals(mOverlays.get(i).getPoint()))
+			return false;
+		}
+		return true;
 	}
 	
 	public void clearOverlay() {
@@ -54,33 +70,62 @@ public class MapViewOverlay extends ItemizedOverlay<PhotoOverlayItem> {
 		return mOverlays.size();
 	}
 	
+	public void removeItem(PhotoOverlayItem item) {
+		mOverlays.remove(item);
+	    setLastFocusedIndex(-1);
+		populate();
+	}
+	
 	@Override
 	protected boolean onTap(int index) {
 		if (!isLocation) {
 			//On affiche le dialogue que si l'on a pas tapé sur la location
 			PhotoOverlayItem item = mOverlays.get(index);
 			
-			Dialog dialog = new Dialog(mContext);
-			dialog.setContentView(R.layout.dialog_photo);
-			dialog.setTitle("Test Photo");
-
-			TextView text = (TextView) dialog.findViewById(R.id.text);
-			text.setText("Quelle belle photo");
-			
-			ImageView image = (ImageView) dialog.findViewById(R.id.image);
+	        LayoutInflater factory = LayoutInflater.from(mContext);
+	        final View alertDialogView = factory.inflate(R.layout.dialog_photo, null);
+	 
+	        //Création de l'AlertDialog
+	        AlertDialog.Builder adb = new AlertDialog.Builder(mContext);
+	 
+	        //On affecte la vue personnalisé que l'on a crée à notre AlertDialog
+	        adb.setView(alertDialogView);
+	 
+	        //On donne un titre à l'AlertDialog
+	        //adb.setTitle("Titre de notre boite de dialogue");
+	        ImageView image = (ImageView) alertDialogView.findViewById(R.id.image);
 			image.setImageBitmap(item.image);
-			
-			dialog.show();
+
+			TextView text = (TextView) alertDialogView.findViewById(R.id.text);
+			text.setText("Quelle belle photo");
+	 
+	        //On affecte un bouton "OK" à notre AlertDialog et on lui affecte un évènement
+	        adb.setPositiveButton("OK", null);
+	 
+	        //On crée un bouton "Supprimer" à notre AlertDialog et on lui affecte un évènement
+	        adb.setNegativeButton("Supprimer", new SupListener(item));
+	        adb.show();
 		}
 		return true;
 	}
+	
+	public class SupListener implements DialogInterface.OnClickListener {
 
-	public boolean onTap(final GeoPoint p, final MapView mapView) {
-		boolean tapped = super.onTap(p, mapView);
-		//tapped vaut true si on a tapé sur un objet
-		if (!tapped) {}
-        return false; 
+		PhotoOverlayItem item;
+		public SupListener(PhotoOverlayItem it) {
+			item = it;
+		}
+		public void onClick(DialogInterface dialog, int which) {
+			removeItem(item);			
+		}
 	}
+
+//	public boolean onTap(final GeoPoint p, final MapView mapView) {
+//		boolean tapped = super.onTap(p, mapView);
+//		//tapped vaut true si on a tapé sur un objet
+//		if (!tapped) {}
+//        return false; 
+//	}
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event, MapView mapView){
