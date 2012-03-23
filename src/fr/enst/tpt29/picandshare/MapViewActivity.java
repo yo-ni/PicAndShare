@@ -19,7 +19,6 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.*;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
@@ -428,51 +427,53 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 					else {
 						photo = getResizedBitmap(photo1, 120, 200, orientation);
 					}
-					
-				if (lastPoint == null) {
-					//Si on a aucune position valide on ajoute au centre de la vue
-					Display display = getWindowManager().getDefaultDisplay();
-					int height = display.getHeight();
-					int width = display.getWidth();
-					Projection p = mapView.getProjection();
-					GeoPoint point = p.fromPixels(width/2, height/2);
-					
-					if(photoViewOverlay.testUnique(point)) {
-						PhotoOverlayItem photoItem  = new PhotoOverlayItem(point,"","",photo,"test");
-						photoViewOverlay.addOverlay(photoItem);
-						
-						//On ajoute directement l'item dans la base
-						myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
-						createItemEntry(photoItem);
-						myDb.close();
+					float[] latLong = new float[2];
+
+					if (!exif.getLatLong(latLong)) {
+						//Si on a aucune position valide exif on ajoute au centre de la vue
+						Display display = getWindowManager().getDefaultDisplay();
+						int height = display.getHeight();
+						int width = display.getWidth();
+						Projection p = mapView.getProjection();
+						GeoPoint point = p.fromPixels(width/2, height/2);
+
+						if(photoViewOverlay.testUnique(point)) {
+							PhotoOverlayItem photoItem  = new PhotoOverlayItem(point,"","",photo,"test");
+							photoViewOverlay.addOverlay(photoItem);
+
+							//On ajoute directement l'item dans la base
+							myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
+							createItemEntry(photoItem);
+							myDb.close();
+						}
+						else {
+							//S'il existe déjà une photo à la même position dans la base,
+							//Il y a un problème à la suppression
+							AlertDialog alertDial = new AlertDialog.Builder(this).create();
+							alertDial.setTitle("Attention!");
+							alertDial.setMessage("Il y a déjà une photo à cet endroit");
+							alertDial.show();
+						}
 					}
 					else {
-						//S'il existe déjà une photo à la même position dans la base,
-						//Il y a un problème à la suppression
-						AlertDialog alertDial = new AlertDialog.Builder(this).create();
-						alertDial.setTitle("Attention!");
-						alertDial.setMessage("Il y a déjà une photo à cet endroit");
-						alertDial.show();
-					}
-				}
-				else {
-					//Sinon on la place à la position de l'utilisateur
-					if (photoViewOverlay.testUnique(lastPoint)) {
-						PhotoOverlayItem photoItem  = new PhotoOverlayItem(lastPoint,"","",photo,"test");
-						photoViewOverlay.addOverlay(photoItem);
-						
-						myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
-						createItemEntry(photoItem);
-						myDb.close();
-					}
-					else {
-						//S'il existe déjà une photo à la même position dans la base,
-						//Il y a un problème à la suppression
-						AlertDialog alertDial = new AlertDialog.Builder(this).create();
-						alertDial.setTitle("Attention!");
-						alertDial.setMessage("Il y a déjà une photo à cet endroit");
-						alertDial.show();
-					}
+						//Sinon on la place à la position de l'exif
+						GeoPoint geoPos = new GeoPoint((int)(latLong[0]*1E6), (int)(latLong[1]*1E6));
+						if (photoViewOverlay.testUnique(geoPos)) {
+							PhotoOverlayItem photoItem  = new PhotoOverlayItem(geoPos,"","",photo,"test");
+							photoViewOverlay.addOverlay(photoItem);
+
+							myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
+							createItemEntry(photoItem);
+							myDb.close();
+						}
+						else {
+							//S'il existe déjà une photo à la même position dans la base,
+							//Il y a un problème à la suppression
+							AlertDialog alertDial = new AlertDialog.Builder(this).create();
+							alertDial.setTitle("Attention!");
+							alertDial.setMessage("Il y a déjà une photo à cet endroit");
+							alertDial.show();
+						}
 					}
 				} catch (FileNotFoundException e) {
 					// TODO Auto-generated catch block
@@ -534,7 +535,6 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 		// CREATE A MATRIX FOR THE MANIPULATION
 		Matrix matrix = new Matrix();
 		//Orientate
-		Log.i("dfsf",""+orientation);
 		switch (orientation) {
 		case 3:
 			matrix.postRotate(180);
