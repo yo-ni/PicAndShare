@@ -24,6 +24,7 @@ import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.view.GestureDetector.OnDoubleTapListener;
 
 public class MapViewActivity extends MapActivity implements OnDoubleTapListener, GestureDetector.OnGestureListener{
@@ -43,6 +44,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 	List<Overlay> mapOverlays;
 	private GestureDetector gestureDetector = null;
 	private SQLiteDatabase myDb;
+	private String comm;
 	
 	//variable pour les menus
 	static final private int ADD_ID = Menu.FIRST;
@@ -95,6 +97,8 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 		mapOverlays.add(mapViewOverlay);
 		photoViewOverlay = new MapViewOverlay(drawable2,this,this,false);
 		mapOverlays.add(photoViewOverlay);
+		
+		comm = "";
 		
 		//Si on a toujours la dernière position active en mémoire on l'affiche
 		if(lastPoint != null){
@@ -371,13 +375,22 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 					GeoPoint point = p.fromPixels(width/2, height/2);
 					
 					if(photoViewOverlay.testUnique(point)) {
-						PhotoOverlayItem photoItem  = new PhotoOverlayItem(point,"","",photo,"test");
-						photoViewOverlay.addOverlay(photoItem);
+						//On demande le commentaire à l'utilisateur
+						AlertDialog.Builder alert = new AlertDialog.Builder(this);
+						alert.setTitle("Entrez un Commentaire");
+
+						// Set an EditText view to get user input 
+						EditText input = new EditText(this);
+						alert.setView(input);
+						OkList list = new OkList(input, point, photo);
+						alert.setPositiveButton("Ok", list);
+						alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+						  public void onClick(DialogInterface dialog, int whichButton) {
+						    // Canceled.
+						  }
+						});
+						alert.show();
 						
-						//On ajoute directement l'item dans la base
-						myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
-						createItemEntry(photoItem);
-						myDb.close();
 					}
 					else {
 						//S'il existe déjà une photo à la même position dans la base,
@@ -391,12 +404,21 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 				else {
 					//Sinon on la place à la position de l'utilisateur
 					if (photoViewOverlay.testUnique(lastPoint)) {
-						PhotoOverlayItem photoItem  = new PhotoOverlayItem(lastPoint,"","",photo,"test");
-						photoViewOverlay.addOverlay(photoItem);
-						
-						myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
-						createItemEntry(photoItem);
-						myDb.close();
+						//On demande le commentaire à l'utilisateur
+						AlertDialog.Builder alert = new AlertDialog.Builder(this);
+						alert.setTitle("Entrez un Commentaire");
+
+						// Set an EditText view to get user input 
+						EditText input = new EditText(this);
+						alert.setView(input);
+						OkList list = new OkList(input, lastPoint, photo);
+						alert.setPositiveButton("Ok", list);
+						alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+						  public void onClick(DialogInterface dialog, int whichButton) {
+						    // Canceled.
+						  }
+						});
+						alert.show();
 					}
 					else {
 						//S'il existe déjà une photo à la même position dans la base,
@@ -437,13 +459,22 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 						GeoPoint point = p.fromPixels(width/2, height/2);
 
 						if(photoViewOverlay.testUnique(point)) {
-							PhotoOverlayItem photoItem  = new PhotoOverlayItem(point,"","",photo,"test");
-							photoViewOverlay.addOverlay(photoItem);
+							//On demande le commentaire à l'utilisateur
+							AlertDialog.Builder alert = new AlertDialog.Builder(this);
+							alert.setTitle("Entrez un Commentaire");
 
-							//On ajoute directement l'item dans la base
-							myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
-							createItemEntry(photoItem);
-							myDb.close();
+							// Set an EditText view to get user input 
+							EditText input = new EditText(this);
+							alert.setView(input);
+							OkList list = new OkList(input, point, photo);
+							alert.setPositiveButton("Ok", list);
+							alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+							  public void onClick(DialogInterface dialog, int whichButton) {
+							    // Canceled.
+							  }
+							});
+							alert.show();
+							
 						}
 						else {
 							//S'il existe déjà une photo à la même position dans la base,
@@ -458,12 +489,22 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 						//Sinon on la place à la position de l'exif
 						GeoPoint geoPos = new GeoPoint((int)(latLong[0]*1E6), (int)(latLong[1]*1E6));
 						if (photoViewOverlay.testUnique(geoPos)) {
-							PhotoOverlayItem photoItem  = new PhotoOverlayItem(geoPos,"","",photo,"test");
-							photoViewOverlay.addOverlay(photoItem);
+							//On demande le commentaire à l'utilisateur
+							AlertDialog.Builder alert = new AlertDialog.Builder(this);
+							alert.setTitle("Entrez un Commentaire");
 
-							myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
-							createItemEntry(photoItem);
-							myDb.close();
+							// Set an EditText view to get user input 
+							EditText input = new EditText(this);
+							alert.setView(input);
+							OkList list = new OkList(input, geoPos, photo);
+							alert.setPositiveButton("Ok", list);
+							alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+							  public void onClick(DialogInterface dialog, int whichButton) {
+							    // Canceled.
+							  }
+							});
+							alert.show();
+							
 						}
 						else {
 							//S'il existe déjà une photo à la même position dans la base,
@@ -560,4 +601,28 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 	      cursor.moveToFirst();
 	      return cursor.getString(column_index);
 	  }
+
+	public class OkList implements DialogInterface.OnClickListener{
+
+		EditText texte;
+		GeoPoint point;
+		Bitmap photo;
+		
+		public OkList(EditText tx, GeoPoint _point, Bitmap _photo){
+			texte = tx;
+			point = _point;
+			photo = _photo;
+		}
+		public void onClick(DialogInterface dialog, int which) {
+			comm = texte.getText().toString();
+			PhotoOverlayItem photoItem  = new PhotoOverlayItem(point,"","",photo,comm);
+			photoViewOverlay.addOverlay(photoItem);
+			
+			//On ajoute directement l'item dans la base
+			myDb = openOrCreateDatabase(getFilesDir()+"/item.dat",MODE_WORLD_WRITEABLE, null);
+			createItemEntry(photoItem);
+			myDb.close();
+		}
+		
+	}
 }
