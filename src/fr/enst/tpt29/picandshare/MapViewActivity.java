@@ -1,7 +1,9 @@
 package fr.enst.tpt29.picandshare;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 import com.google.android.maps.*;
@@ -13,9 +15,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.*;
 import android.graphics.drawable.Drawable;
 import android.location.*;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.*;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
@@ -356,10 +360,10 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 				Bitmap photo1 = (Bitmap) data.getExtras().get("data");
 				Bitmap photo;
 				if (photo1.getHeight() > photo1.getWidth()){
-					photo = getResizedBitmap(photo1, 200, 120);
+					photo = getResizedBitmap(photo1, 200, 120,0);
 				}
 				else {
-					photo = getResizedBitmap(photo1, 120, 200);
+					photo = getResizedBitmap(photo1, 120, 200,0);
 				}
 				if (lastPoint == null) {
 					//Si on a aucune position valide on ajoute au centre de la vue
@@ -414,13 +418,15 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 			if(data!=null) {
 				Uri selPhoto = data.getData();
 				try {
+					ExifInterface exif = new ExifInterface(getRealPathFromURI(selPhoto));
+					int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
 					Bitmap photo1 = BitmapFactory.decodeStream(getContentResolver().openInputStream(selPhoto));
 					Bitmap photo;
 					if (photo1.getHeight() > photo1.getWidth()){
-						photo = getResizedBitmap(photo1, 200, 120);
+						photo = getResizedBitmap(photo1, 200, 120, orientation);
 					}
 					else {
-						photo = getResizedBitmap(photo1, 120, 200);
+						photo = getResizedBitmap(photo1, 120, 200, orientation);
 					}
 					
 				if (lastPoint == null) {
@@ -471,6 +477,9 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 				} catch (FileNotFoundException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 		}
@@ -515,7 +524,7 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
         return null;
     }    
 	
-	public Bitmap getResizedBitmap(Bitmap bm, int newHeight, int newWidth) {
+	public Bitmap getResizedBitmap(Bitmap bm, int newHeight, int newWidth, int orientation) {
 		
 		int width = bm.getWidth();
 		int height = bm.getHeight();
@@ -524,6 +533,19 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 		
 		// CREATE A MATRIX FOR THE MANIPULATION
 		Matrix matrix = new Matrix();
+		//Orientate
+		Log.i("dfsf",""+orientation);
+		switch (orientation) {
+		case 3:
+			matrix.postRotate(180);
+			break;
+		case 6:
+			matrix.postRotate(90);
+			break;
+		case 8:
+			matrix.postRotate(270);
+		}
+		
 		// RESIZE THE BIT MAP
 		matrix.postScale(scaleWidth, scaleHeight);
 		// RECREATE THE NEW BITMAP
@@ -531,4 +553,12 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 		return resizedBitmap;
 	}
 
+	private String getRealPathFromURI(Uri contentUri) {
+	      String[] proj = { MediaStore.Images.Media.DATA };
+	      Cursor cursor = managedQuery(contentUri, proj, null, null, null);
+
+	      int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+	      cursor.moveToFirst();
+	      return cursor.getString(column_index);
+	  }
 }
