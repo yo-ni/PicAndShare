@@ -1,6 +1,5 @@
 package fr.enst.tpt29.picandshare;
 
-import android.R.string;
 import android.graphics.Bitmap;
 
 import com.google.android.maps.GeoPoint;
@@ -8,13 +7,14 @@ import com.google.android.maps.OverlayItem;
 
 public class PhotoOverlayItem extends OverlayItem {
 
+	//Marqueur qui contient la photo et le commentaire en plus
 	Bitmap image;
-	String comm;
+	String comment;
 	
-	public PhotoOverlayItem(GeoPoint point, String title, String snippet, Bitmap bm, String co) {
+	public PhotoOverlayItem(GeoPoint point, String title, String snippet, Bitmap bm, String com) {
 		super(point, title, snippet);
 		image = bm;
-		comm = co;
+		comment = com;
 	}
 	
 	public Bitmap getBitmap() {
@@ -22,7 +22,7 @@ public class PhotoOverlayItem extends OverlayItem {
 	}
 	
 	public String getComm() {
-		return comm;
+		return comment;
 	}
 	
 	public int getLat() {
@@ -32,5 +32,4 @@ public class PhotoOverlayItem extends OverlayItem {
 	public int getLong() {
 		return mPoint.getLongitudeE6();
 	}
-
 }

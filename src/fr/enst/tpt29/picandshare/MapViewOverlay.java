@@ -9,21 +9,20 @@ import android.view.MotionEvent;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
 
 public class MapViewOverlay extends ItemizedOverlay<PhotoOverlayItem> {
 	
+	//Liste qui contiendra les marqueurs
 	private ArrayList<PhotoOverlayItem> mOverlays = new ArrayList<PhotoOverlayItem>();
 	private Context mContext;
 	private MapViewActivity activ;
+	//Booléen qui s'il est activé correspond à l'item location
 	boolean isLocation;
 	
 	public MapViewOverlay(Drawable defaultMarker) {
-		//super(defaultMarker);
 		  super(boundCenterBottom(defaultMarker));
 	}
 	
@@ -35,14 +34,10 @@ public class MapViewOverlay extends ItemizedOverlay<PhotoOverlayItem> {
 		  isLocation = isloc;
 		}
 
+	//Ajout d'un item à la liste
 	public void addOverlay(PhotoOverlayItem overlay) {
 	    mOverlays.add(overlay);
 	    populate();
-	}
-	
-	public void setOverlay(PhotoOverlayItem overlay, int i) {
-		mOverlays.set(i, overlay);
-		populate();
 	}
 	
 	public void clearOverlay() {
@@ -62,18 +57,16 @@ public class MapViewOverlay extends ItemizedOverlay<PhotoOverlayItem> {
 	@Override
 	protected boolean onTap(int index) {
 		if (!isLocation) {
+			//On affiche le dialogue que si l'on a pas tapé sur la location
 			PhotoOverlayItem item = mOverlays.get(index);
-//			AlertDialog.Builder dialog = new AlertDialog.Builder(mContext);
-//			dialog.setTitle(item.getTitle());
-//			dialog.setMessage(item.getSnippet());
-//			dialog.show();
+			
 			Dialog dialog = new Dialog(mContext);
-
 			dialog.setContentView(R.layout.dialog_photo);
 			dialog.setTitle("Test Photo");
 
 			TextView text = (TextView) dialog.findViewById(R.id.text);
 			text.setText("Quelle belle photo");
+			
 			ImageView image = (ImageView) dialog.findViewById(R.id.image);
 			image.setImageBitmap(item.image);
 			
@@ -84,15 +77,14 @@ public class MapViewOverlay extends ItemizedOverlay<PhotoOverlayItem> {
 
 	public boolean onTap(final GeoPoint p, final MapView mapView) {
 		boolean tapped = super.onTap(p, mapView);
-        if (!tapped) {                
-        	//Création de l'objet
-        }                            
+		//tapped vaut true si on a tapé sur un objet
+		if (!tapped) {}
         return false; 
 	}
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event, MapView mapView){
-		
+		//On retire le follow si on l'avait activé et que l'on se déplace sur la carte
 		if (MapViewActivity.follow) {
 			MapViewActivity.follow = false; 
 			((Button) activ.findViewById(R.id.follow)).setBackgroundDrawable(activ.getResources().getDrawable(R.drawable.gps_unactive));
