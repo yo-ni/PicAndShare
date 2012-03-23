@@ -102,7 +102,7 @@ public class MapViewOverlay extends ItemizedOverlay<PhotoOverlayItem> {
 			image.setImageBitmap(item.image);
 
 			TextView text = (TextView) alertDialogView.findViewById(R.id.text);
-			text.setText("Quelle belle photo");
+			text.setText(item.getComm());
 	 
 	        //On affecte un bouton "OK" à notre AlertDialog et on lui affecte un évènement
 	        adb.setPositiveButton("OK", null);
@@ -125,12 +125,12 @@ public class MapViewOverlay extends ItemizedOverlay<PhotoOverlayItem> {
 		}
 	}
 
-//	public boolean onTap(final GeoPoint p, final MapView mapView) {
-//		boolean tapped = super.onTap(p, mapView);
-//		//tapped vaut true si on a tapé sur un objet
-//		if (!tapped) {}
-//        return false; 
-//	}
+	public boolean onTap(final GeoPoint p, final MapView mapView) {
+		boolean tapped = super.onTap(p, mapView);
+		//tapped vaut true si on a tapé sur un objet
+		if (!tapped) {}
+        return false; 
+	}
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event, MapView mapView){

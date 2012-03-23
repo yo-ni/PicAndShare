@@ -19,6 +19,7 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.*;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
@@ -357,13 +358,10 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 			//On reçoit ou non une photo de l'appareil photo
 			if(data!=null) {
 				Bitmap photo1 = (Bitmap) data.getExtras().get("data");
-				Bitmap photo;
-				if (photo1.getHeight() > photo1.getWidth()){
-					photo = getResizedBitmap(photo1, 200, 120,0);
-				}
-				else {
-					photo = getResizedBitmap(photo1, 120, 200,0);
-				}
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+		        photo1.compress(Bitmap.CompressFormat.JPEG, 100, out);
+		        Bitmap photo = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.toByteArray().length);
+		        
 				if (lastPoint == null) {
 					//Si on a aucune position valide on ajoute au centre de la vue
 					Display display = getWindowManager().getDefaultDisplay();
@@ -418,14 +416,15 @@ public class MapViewActivity extends MapActivity implements OnDoubleTapListener,
 				Uri selPhoto = data.getData();
 				try {
 					ExifInterface exif = new ExifInterface(getRealPathFromURI(selPhoto));
+
 					int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
 					Bitmap photo1 = BitmapFactory.decodeStream(getContentResolver().openInputStream(selPhoto));
 					Bitmap photo;
 					if (photo1.getHeight() > photo1.getWidth()){
-						photo = getResizedBitmap(photo1, 200, 120, orientation);
+						photo = getResizedBitmap(photo1, photo1.getHeight()/16, photo1.getWidth()/16, orientation);
 					}
 					else {
-						photo = getResizedBitmap(photo1, 120, 200, orientation);
+						photo = getResizedBitmap(photo1, photo1.getHeight()/16, photo1.getWidth()/16, orientation);
 					}
 					float[] latLong = new float[2];
 
